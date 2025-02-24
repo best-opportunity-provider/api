@@ -1,2 +1,2 @@
 # TODO:
-#   1. GET /palce?name={}&api_key={}
+#   1. GET /place?name={}&api_key={}

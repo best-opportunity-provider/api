@@ -1,2 +1,2 @@
 # TODO:
-#   1. GET /opportunity-provider?name={}&api_key={}
+#   1. GET /opportunity-provider?search={}&api_key={}
