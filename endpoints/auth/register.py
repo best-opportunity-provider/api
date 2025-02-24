@@ -1,7 +1,10 @@
-from ..base import *
+from fastapi.responses import JSONResponse
+from random import choice
+
+from ..base import app
 
 
-@app.post('/api/register')
+@app.post('/register')
 async def register_mock() -> JSONResponse:
     return choice([
         JSONResponse({

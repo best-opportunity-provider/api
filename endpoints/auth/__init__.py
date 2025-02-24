@@ -1,3 +1,11 @@
 from . import (
-    register, login, logout,
+    login,
+    logout,
+    register,
 )
+
+__all__ = [
+    'login',
+    'logout',
+    'register',
+]
