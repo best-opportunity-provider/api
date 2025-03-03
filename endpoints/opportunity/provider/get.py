@@ -14,7 +14,7 @@ from ...base import (
     APIKey,
 )
 from database.models.trans_string import Language
-
+from database.models.opportunity.opportunity import OpportunityProvider
 
 class QueryParams(pydantic.BaseModel):
     model_config = {
@@ -37,6 +37,11 @@ class QueryParams(pydantic.BaseModel):
 
 
 @app.get('/opportunity-provider')
+async def get(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+    providers = OpportunityProvider.get_all(regex=query.regex)
+    return providers
+
+# @app.get('/opportunity-provider')
 async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
     response = choice(
         [

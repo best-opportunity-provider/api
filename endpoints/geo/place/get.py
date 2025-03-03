@@ -12,6 +12,8 @@ from ...base import (
     APIKey,
 )
 from database.models.trans_string import Language
+from database.models import geo
+
 
 class QueryParams(pydantic.BaseModel):
     model_config = {
@@ -34,6 +36,12 @@ class QueryParams(pydantic.BaseModel):
 
 
 @app.get('/place')
+async def get(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+    places = geo.Place.get_all(regex=query.regex)
+    return JSONResponse(places, status_code=200)
+
+
+# @app.get('/place')
 async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
     response = choice(
         [

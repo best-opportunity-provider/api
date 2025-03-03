@@ -14,6 +14,7 @@ from ...base import (
     APIKey,
 )
 from database.models.trans_string import Language
+from database.models.opportunity.opportunity import OpportunityTag
 
 class QueryParams(pydantic.BaseModel):
     model_config = {
@@ -33,8 +34,14 @@ class QueryParams(pydantic.BaseModel):
             raise PydanticCustomError(
                 'pattern_error', 'Tags filter should be a valid regular expression'
             )
-        
+
+
 @app.get('/opportunity-tag')
+async def get(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+    tags = OpportunityTag.get_all(regex=query.regex)
+    return tags
+
+# @app.get('/opportunity-tag')
 async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
     response = choice (
         [

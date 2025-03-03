@@ -12,7 +12,7 @@ from ...base import (
     APIKey,
 )
 from database.models.trans_string import Language
-
+from database.models.opportunity.opportunity import OpportunityLanguage
 class QueryParams(pydantic.BaseModel):
     model_config = {
         'extra': 'ignore',
@@ -21,7 +21,13 @@ class QueryParams(pydantic.BaseModel):
     api_key: APIKey
     lang: Language
 
+
 @app.get('/opportunity-language')
+async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+    languages = OpportunityLanguage.get_all()
+    return languages
+
+# @app.get('/opportunity-language')
 async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
     response = choice(
         None, 

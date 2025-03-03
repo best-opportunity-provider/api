@@ -12,7 +12,7 @@ from ...base import (
     generate_object_id,
 )
 from database.models.trans_string import Language
-
+from database.models.opportunity.opportunity import Opportunity
 
 class QueryParams(pydantic.BaseModel):
     model_config = ({'extra': 'ignore'},)
@@ -35,7 +35,12 @@ class BodyParams(pydantic.BaseModel):
     translations: Annotated[list[Language], pydantic.Field(default_factory=list)]
 
 
+
 @app.post('/opportunities')
+async def filter(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+    ...
+
+# @app.post('/opportunities')
 async def filter_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
     response = choice(
         [
