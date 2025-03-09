@@ -17,17 +17,17 @@ class ErrorAppender[E: Enum]:
 
     @classmethod
     def get_errors_list(cls, trace: ErrorTrace, path: list[str]) -> list[Error]:
-        for part in path[:-1]:
-            if part not in trace:
-                trace[part] = {}
-            elif not isinstance(trace[part], dict):
-                raise ValueError('Conflicting errors')
-            trace = trace[part]
-        if path[-1] not in trace:
-            trace[path[-1]] = []
-        elif not isinstance(trace[path[-1]], list):
-            raise ValueError('Confilicting errors')
-        return trace[path[-1]]
+        for part in path:
+            assert not isinstance(trace.errors, list)
+            if trace.errors is None:
+                trace.errors = {}
+            if part not in trace.errors:
+                trace.errors[part] = ErrorTrace()
+            trace = trace.errors[part]
+        assert not isinstance(trace.errors, dict)
+        if trace.errors is None:
+            trace.errors = []
+        return trace.errors
 
     def __call__(self, trace: ErrorTrace, error_code: E, **kwargs) -> None:
         transformed_error = self.transformer(error_code, **kwargs)

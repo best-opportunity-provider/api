@@ -10,7 +10,17 @@ class Error(TypedDict):
     message: str
 
 
-type ErrorTrace = dict[str, ErrorTrace | list[Error]]
+@dataclass
+class ErrorTrace:
+    type Underlying = dict[str, Underlying] | list[Error]
+
+    errors: dict[str, 'ErrorTrace'] | list[Error] | None = None
+
+    def to_underlying(self) -> Underlying:
+        assert self.errors is not None
+        if isinstance(self.errors, list):
+            return self.errors
+        return {field: trace.to_underlying() for field, trace in self.errors.items()}
 
 
 class Language(StrEnum):
@@ -25,6 +35,3 @@ class TranslatedString:
 
     def get_translation(self, language: Language) -> str:
         return getattr(self, language.value)
-
-    def __call__(self, language: Language) -> str:
-        return self.get_translation(language)
