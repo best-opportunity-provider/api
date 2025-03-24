@@ -16,3 +16,10 @@ type ID = Annotated[str, pydantic.Field(pattern=OBJECT_ID_REGEX)]
 
 def generate_object_id() -> str:
     return ''.join([choice('abcdef0123456789') for i in range(24)])
+
+class BaseQueryParams(pydantic.BaseModel):
+    model_config = {
+        'extra': 'ignore',
+    }
+
+    api_key: APIKey

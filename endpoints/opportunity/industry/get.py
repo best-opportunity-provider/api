@@ -21,7 +21,7 @@ class QueryParams(pydantic.BaseModel):
 
 
 @app.get('/opportunity-industry')
-async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+async def get(query: Annotated[QueryParams, Query()]) -> JSONResponse:
     industries = OpportunityIndustry.get_all()
     return industries
 
