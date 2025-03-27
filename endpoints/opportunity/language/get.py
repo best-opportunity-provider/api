@@ -8,17 +8,16 @@ import pydantic
 from pydantic_core import PydanticCustomError
 
 from ...base import (
+    BaseQueryParams,
     app,
     APIKey,
 )
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import OpportunityLanguage
-class QueryParams(pydantic.BaseModel):
+class QueryParams(BaseQueryParams):
     model_config = {
         'extra': 'ignore',
     }
-
-    api_key: APIKey
     lang: Language
 
 

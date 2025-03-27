@@ -3,25 +3,16 @@
 
 from typing import (
     Annotated,
-    Self,
-    Literal,
 )
-from random import choice
 from enum import IntEnum
 
 from fastapi import Query, Body
 from fastapi.responses import JSONResponse, Response
 import pydantic
-from pydantic_core import PydanticCustomError
 
 from database.models.opportunity import opportunity
 from database.models.trans_string import Language
-from database.models import geo
 
-from database.models.geo import (
-    Country,
-    City,
-)
 from database.models.trans_string.embedded import ContainedTransString
 
 import formatters as fmt
@@ -67,7 +58,7 @@ appender = fmt.enum.ErrorAppender[DBError](
 @app.patch('/{language}/private/opportunity-industry')
 async def patch(
     language: Language, body: Annotated[BodyParams, Body()], query: Annotated[QueryParams, Query()]   
-) -> Response:
+) -> JSONResponse:
     formatted_errors = fmt.ErrorTrace()
     if (old_instance := opportunity.OpportunityIndustry.objects.get(id=query.id)) is None:
         appender(formatted_errors, DBError.INVALID_INDUSTRY_ID, language)
