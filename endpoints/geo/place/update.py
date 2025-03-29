@@ -21,7 +21,7 @@ from database.models.geo import (
     Country,
     City,
 )
-from database.models.trans_string.embedded import ContainedTransString
+from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
 
 import formatters as fmt
 from ...base import (
@@ -33,13 +33,7 @@ from ...base import (
 
 class QueryParams(BaseQueryParams):
     id: ID
-
-
-class ContainedTransStringParam(pydantic.BaseModel):
-    model_config = {'extra': 'ignore'}
-    content: ContainedTransString
-    language: Language
-
+   
 
 class CityModel(pydantic.BaseModel):
     model_config = {
@@ -61,7 +55,7 @@ class BodyParams(pydantic.BaseModel):
     model_config = {
         'extra': 'ignore',
     }
-    name: ContainedTransStringParam
+    name: ContainedTransStringModel
     location: Annotated[CityModel | CountryModel, pydantic.Field(discriminator='type')]
 
 

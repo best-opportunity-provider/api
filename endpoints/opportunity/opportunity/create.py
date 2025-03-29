@@ -6,8 +6,8 @@ from fastapi import Query, Body
 from fastapi.responses import JSONResponse
 import pydantic
 
-from database.models.geo import Place
-from database.models.trans_string.embedded import TransString
+from database.models.geo import Place, PlaceModel
+from database.models.trans_string.embedded import TransString, TransStringModel
 
 from ...base import (
     app,
@@ -22,15 +22,15 @@ class BodyParams(pydantic.BaseModel):
     }
 
     fallback_language: Language
-    name: TransString
-    short_description: TransString
-    source: opportunity.OpportunitySource
-    provider: opportunity.OpportunityProvider
-    industry: opportunity.OpportunityIndustry
-    tags: list[opportunity.OpportunityTag]
-    languages: list[opportunity.OpportunityLanguage]
-    places: list[Place]
-    sections: list[opportunity.OpportunitySection]
+    name: TransStringModel
+    short_description: TransStringModel
+    source: opportunity.OpportunitySourceModel
+    provider: opportunity.OpportunityProviderModel
+    industry: opportunity.OpportunityIndustryModel
+    tags: list[opportunity.OpportunityTagModel]
+    languages: list[opportunity.OpportunityLanguageModel]
+    places: list[PlaceModel]
+    sections: list[opportunity.OpportunitySectionModel]
 
 
 @app.post('/private/opportunity')

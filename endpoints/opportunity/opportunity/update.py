@@ -23,7 +23,7 @@ from database.models.geo import (
     City,
     Place,
 )
-from database.models.trans_string.embedded import ContainedTransString, TransString
+from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel, TransString
 
 import formatters as fmt
 from ...base import (
@@ -35,16 +35,11 @@ from ...base import (
 class QueryParams(BaseQueryParams):
     id: ID
 
-class ContainedTransStringParam(pydantic.BaseModel):
-    model_config = {'extra': 'ignore'}
-    content: ContainedTransString
-    language: Language
-
 class BodyParams(pydantic.BaseModel):
     model_config = {
         'extra': 'ignore',
     }
-    name: ContainedTransStringParam
+    name: ContainedTransStringModel
 
 class DBError(IntEnum):
     INVALID_OPPORTUNITY_ID = 200

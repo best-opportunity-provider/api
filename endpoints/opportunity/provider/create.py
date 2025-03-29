@@ -9,7 +9,7 @@ import pydantic
 
 from database.models.file import File
 from database.models.opportunity import opportunity
-from database.models.trans_string.embedded import ContainedTransString
+from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
 
 from ...base import (
     app,
@@ -26,7 +26,7 @@ class BodyParams(pydantic.BaseModel):
         'extra': 'ignore',
     }
 
-    name: ContainedTransString
+    name: ContainedTransStringModel
     # logo: File // TODO: файлик разве не соло в бодике?
 
 

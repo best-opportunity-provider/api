@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 import pydantic
 
 from database.models.opportunity import opportunity
-from database.models.trans_string.embedded import ContainedTransString
+from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
 
 from ...base import (
     app,
@@ -19,7 +19,7 @@ class BodyParams(pydantic.BaseModel):
         'extra': 'ignore',
     }
 
-    name: ContainedTransString
+    name: ContainedTransStringModel
 
 
 @app.post('private/opportunity-tag')

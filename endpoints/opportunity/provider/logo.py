@@ -9,7 +9,7 @@ from fastapi import Body, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
 import pydantic
 
-from database.models.file import File
+from database.models.file import File, FileModel
 from database.models.opportunity import opportunity
 from formatters.base import Language
 
@@ -30,7 +30,7 @@ class BodyParams(pydantic.BaseModel):
         'extra': 'ignore',
     }
 
-    logo: File
+    logo: FileModel
 
 class DBError(IntEnum):
     INVALID_OPPORTUNITY_ID = 200

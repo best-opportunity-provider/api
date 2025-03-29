@@ -16,7 +16,7 @@ import pydantic
 from database.models.opportunity import opportunity
 from database.models.trans_string import Language
 
-from database.models.trans_string.embedded import ContainedTransString
+from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
 
 import formatters as fmt
 from ...base import (
@@ -33,7 +33,7 @@ class BodyParams(pydantic.BaseModel):
         'extra': 'ignore',
     }
 
-    name: ContainedTransString
+    name: ContainedTransStringModel
 
 
 class DBError(IntEnum):

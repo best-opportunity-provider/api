@@ -26,7 +26,7 @@ class QueryParams(pydantic.BaseModel):
 
     @pydantic.field_validator('regex')
     @classmethod
-    def validate_regex(cls, regex: str) -> str:
+    def validate_regex(cls, regex) -> str:
         try:
             re.compile(str)
         except re.PatternError:

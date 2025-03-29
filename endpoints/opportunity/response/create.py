@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 import pydantic
 
 from database.models.opportunity import response
-from database.models.opportunity.form import OpportunityForm
+from database.models.opportunity.form import OpportunityForm, OpportunityFormModel
 from database.models.user import User
 
 from ...base import (
@@ -26,7 +26,7 @@ class BodyParams(pydantic.BaseModel):
     }
 
     user: User
-    form: OpportunityForm
+    form: OpportunityFormModel
     form_version: int
     data: dict
 

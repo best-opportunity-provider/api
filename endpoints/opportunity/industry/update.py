@@ -13,7 +13,7 @@ import pydantic
 from database.models.opportunity import opportunity
 from database.models.trans_string import Language
 
-from database.models.trans_string.embedded import ContainedTransString
+from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
 
 import formatters as fmt
 from ...base import (
@@ -26,16 +26,11 @@ from ...base import (
 class QueryParams(BaseQueryParams):
     id: ID
 
-class ContainedTransStringParam(pydantic.BaseModel):
-    model_config = {'extra': 'ignore'}
-    content: ContainedTransString
-    language: Language
-
 class BodyParams(pydantic.BaseModel):
     model_config = {
         'extra': 'ignore',
     }
-    name: ContainedTransStringParam
+    name: ContainedTransStringModel
 
 class DBError(IntEnum):
     INVALID_INDUSTRY_ID = 200
