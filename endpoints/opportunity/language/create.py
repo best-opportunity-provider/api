@@ -27,6 +27,5 @@ class BodyParams(pydantic.BaseModel):
 async def create(
     body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
 ) -> JSONResponse:
-    #TODO: seems it is incorrect
-    instance = opportunity.Language.create(body.name, body.language)
+    instance = opportunity.OpportunityLanguage.create(body.name, body.language)
     return JSONResponse({'id': instance.id})

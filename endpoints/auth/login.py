@@ -1,10 +1,23 @@
+from typing import Annotated, Optional
+from fastapi import Body, Request
 from fastapi.responses import JSONResponse
 from random import choice
 
+from database.models.api import PersonalAPIKey
+from database.models.user import User
+from formatters.base import Language
+
 from ..base import app
 
-
 @app.post('/login')
+async def login(request: Request, body: Annotated[User.LoginModel, Body()]) -> JSONResponse:
+    user: Optional['User'] = User.login(body)
+    if user is None:
+        return JSONResponse({})
+    PersonalAPIKey.generate(user, request.client.host)
+    return JSONResponse(user.id, status_code=200)
+
+
 async def login_mock() -> JSONResponse:
     response = choice(
         [

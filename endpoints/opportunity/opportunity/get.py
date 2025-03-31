@@ -13,7 +13,7 @@ from ...base import (
     APIKey,
 )
 from database.models.trans_string import Language
-from database.models.opportunity.opportunity import OpportunityIndustry
+from database.models.opportunity.opportunity import Opportunity
 
 import formatters as fmt
 
@@ -31,7 +31,7 @@ class QueryParamsByID(BaseQueryParams):
     id: ID
 
 class DBError(IntEnum):
-    INVALID_INDUSTRY_ID = 200
+    INVALID_OPPORTUNITY_ID = 200
 
 appender = fmt.enum.ErrorAppender[DBError](
     transformer=fmt.enum.transformers.DictErrorTransformer(
@@ -39,43 +39,26 @@ appender = fmt.enum.ErrorAppender[DBError](
             DBError.INVALID_COUNTRY_ID: fmt.enum.Error(
                 type=fmt.enum.infer,
                 message=fmt.TranslatedString(
-                    en='Indsutry with provided ID doesn\'t exist',
-                    ru='Индустрии с таким идентификатором не существует',
+                    en='Opportunity with provided ID doesn\'t exist',
+                    ru='Вакансии с таким идентификатором не существует',
                 ),
-                path=['body', 'industry', 'id']
+                path=['body', 'opportunity', 'id']
             ),
         }
     )
 )
 
 
-@app.get('/{language}/opportunity-industry')
+@app.get('/{language}/opportunity')
 async def get(language: Language, query: Annotated[QueryParamsByID, Query()]) -> JSONResponse:
     formatted_errors = fmt.ErrorTrace()
-    if (instance := OpportunityIndustry.objects.get(id=query.id)) is not None:
+    if (instance := Opportunity.objects.get(id=query.id)) is not None:
         return JSONResponse(instance, status_code=200)
-    appender(formatted_errors, DBError.INVALID_INDUSTRY_ID, language)
+    appender(formatted_errors, DBError.INVALID_OPPORTUNITY_ID, language)
     return JSONResponse(formatted_errors.to_underlying())
     
 
-@app.get('/opportunity-industry')
+@app.get('/opportunity')
 async def get_all(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    industries = OpportunityIndustry.get_all(regex=query.regex)
+    industries = Opportunity.get_all()
     return industries
-
-
-# @app.get('/opportunity-industry')
-async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    response = choice(
-        [
-            None,
-            JSONResponse({}, status_code=401),
-            JSONResponse({}, status_code=500),
-        ]
-    )
-    if response is not None:
-        return response
-    return JSONResponse(
-        ['IT', 'Hotel business', 'Art', 'Medicine'],
-        status_code=200,
-    )
