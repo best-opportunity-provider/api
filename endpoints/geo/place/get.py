@@ -1,64 +1,38 @@
 from enum import IntEnum
 from typing import Annotated
-from random import choice
-import re
 
 from fastapi import Query
 from fastapi.responses import JSONResponse
-import pydantic
-from pydantic_core import PydanticCustomError
 
 from ...base import (
     ID,
     BaseQueryParams,
+    escape_for_regex,
     app,
-    APIKey,
 )
-from database.models.trans_string import Language
-from database.models import geo
+from database.models.geo import Place
 import formatters as fmt
+from formatters import Language
 
-class QueryParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
 
-    regex: str = '*'
-    api_key: APIKey
-    lang: Language
-
-    @pydantic.field_validator('regex')
-    @classmethod
-    def validate_regex(cls, regex) -> str:
-        try:
-            re.compile(str)
-        except re.PatternError:
-            raise PydanticCustomError(
-                'pattern_error', 'Places filter should be a valid regular expression'
-            )
-
-class QueryParamsByID(BaseQueryParams):
-    model_config = {
-        'extra': 'ignore',
-    }
-
+class GetByIdQueryParams(BaseQueryParams):
     id: ID
 
 
-class DBError(IntEnum):
-    INVALID_PLACE_ID = 200
+class GetByIdError(IntEnum):
+    INVALID_ID = 200
 
 
-appender = fmt.enum.ErrorAppender[DBError](
+appender = fmt.enum.ErrorAppender[GetByIdError](
     transformer=fmt.enum.transformers.DictErrorTransformer(
         {
-            DBError.INVALID_COUNTRY_ID: fmt.enum.Error(
+            GetByIdError.INVALID_ID: fmt.enum.Error(
                 type=fmt.enum.infer,
                 message=fmt.TranslatedString(
-                    en='Place with provided ID doesn\'t exist',
+                    en="Place with provided ID doesn't exist",
                     ru='Локации с таким идентификатором не существует',
                 ),
-                path=['body', 'place', 'id']
+                path=['query', 'id'],
             ),
         }
     )
@@ -66,33 +40,31 @@ appender = fmt.enum.ErrorAppender[DBError](
 
 
 @app.get('/{language}/place')
-async def get(language: Language, query: Annotated[QueryParamsByID, Query()]) -> JSONResponse:
-    formatted_errors = fmt.ErrorTrace()
-    if (instance := geo.Place.objects.get(id=query.id)) is not None:
-        return JSONResponse(instance, status_code=200)
-    appender(formatted_errors, DBError.INVALID_PLACE_ID, language)
-    return JSONResponse(formatted_errors.to_underlying())
-    
+async def get(
+    language: Language,
+    query: Annotated[GetByIdQueryParams, Query()],
+) -> JSONResponse:
+    instance: Place | None = Place.objects.get(id=query.id)
+    if instance is None:
+        formatted_errors = fmt.ErrorTrace()
+        appender(formatted_errors, GetByIdError.INVALID_ID, language=language)
+        return JSONResponse(formatted_errors, status_code=403)
+    # TODO: return dict representation of a `Place`
+    return JSONResponse({})
 
 
-@app.get('/place')
-async def get_all(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    places = geo.Place.get_all(regex=query.regex)
-    return JSONResponse(places, status_code=200)
+class GetAllQueryParams(BaseQueryParams):
+    filter: str | None = None
 
 
-# @app.get('/place')
-async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    response = choice(
-        [
-            None,
-            JSONResponse({}, status_code=401),
-            JSONResponse({}, status_code=500),
-        ]
-    )
-    if response is not None:
-        return response
-    return JSONResponse(
-        ['MIPT', 'HSE', 'MSU', 'ITMO'],
-        status_code=200,
-    )
+@app.get('/{language}/places')
+async def get_all(
+    language: Language,
+    query: Annotated[GetAllQueryParams, Query()],
+) -> JSONResponse:
+    if query.filter is None:
+        places = Place.get_all()
+    else:
+        places = Place.get_all(regex=escape_for_regex(query.filter))
+    # TODO: return list of dicts with representations of `Place`s
+    return JSONResponse([])
