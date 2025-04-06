@@ -1,36 +1,33 @@
 from typing import Annotated, Optional
+from datetime import (
+    UTC,
+    datetime,
+    timedelta,
+)
+
 from fastapi import Body, Request
 from fastapi.responses import JSONResponse
-from random import choice
 
 from database.models.api import PersonalAPIKey
-from database.models.user import User
-from formatters.base import Language
-
+from database.models.user import (
+    User,
+    LoginModel,
+)
 from ..base import app
 
+
+class BodyModel(LoginModel):
+    remember_me: bool = False
+
+
 @app.post('/login')
-async def login(request: Request, body: Annotated[User.LoginModel, Body()]) -> JSONResponse:
+async def login(request: Request, body: Annotated[BodyModel, Body()]) -> JSONResponse:
     user: Optional['User'] = User.login(body)
     if user is None:
         return JSONResponse({})
-    PersonalAPIKey.generate(user, request.client.host)
-    return JSONResponse(user.id, status_code=200)
-
-
-async def login_mock() -> JSONResponse:
-    response = choice(
-        [
-            None,
-            JSONResponse({}, status_code=401),
-            JSONResponse({}, status_code=500),
-        ]
+    api_key = PersonalAPIKey.generate(
+        user,
+        request.client.host,
+        datetime.now(UTC) + (timedelta(days=365) if body.remember_me else timedelta(hours=2)),
     )
-    if response is not None:
-        return response
-    return JSONResponse(
-        {
-            'api_key': 'dev-b99834e241f308f19623478b8d40c764cec7f0bd248bb3a5c8e6737ec4bada0b',
-        },
-        status_code=200,
-    )
+    return JSONResponse(api_key.key, status_code=200)
