@@ -24,10 +24,10 @@ class BodyModel(LoginModel):
 async def login(request: Request, body: Annotated[BodyModel, Body()]) -> JSONResponse:
     user: Optional['User'] = User.login(body)
     if user is None:
-        return JSONResponse({})
+        return JSONResponse({}, status_code=401)
     api_key = PersonalAPIKey.generate(
         user,
         request.client.host,
         datetime.now(UTC) + (timedelta(days=365) if body.remember_me else timedelta(hours=2)),
     )
-    return JSONResponse(api_key.key, status_code=200)
+    return JSONResponse({'api_key': str(api_key)})
