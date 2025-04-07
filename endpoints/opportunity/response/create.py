@@ -1,43 +1,34 @@
-# TODO:
-#   1. POST /opportunity/response?opportunity={id}&api_key={}
 from typing import Annotated
 
-from fastapi import Query, Body
+from fastapi import (
+    Depends,
+    Query,
+)
 from fastapi.responses import JSONResponse
 
-import pydantic
-
-from database.models.opportunity import response
-from database.models.opportunity.form import OpportunityForm, OpportunityFormModel
-from database.models.user import User
-
 from ...base import (
-    ID,
     app,
     BaseQueryParams,
+    ObjectId,
 )
+from database import PersonalAPIKey
+import formatters as fmt
+import middleware
+
 
 class QueryParams(BaseQueryParams):
-    opportunity: ID
-
-class BodyParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-
-    user: User
-    form: OpportunityFormModel
-    form_version: int
-    data: dict
+    form_id: ObjectId
 
 
-@app.post('/opportunity/response')
-async def create(body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
+@app.post('/{language}/opportunity/response')
+async def create(
+    language: fmt.Language,
+    query: Annotated[QueryParams, Query()],
+    api_key: Annotated[
+        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+    ],
 ) -> JSONResponse:
-    instance = response.OpportunityFormResponse.create(
-        body.user,
-        body.form,
-        body.form_version,
-        body.data
-    )
-    return JSONResponse({'id': instance.id})
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    ...  # TODO
+    return JSONResponse({})
