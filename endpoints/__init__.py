@@ -2,7 +2,7 @@ from . import (
     auth,
     # TODO: uncomment these, once all the errors are fixed
     # geo,
-    # opportunity,
+    opportunity,
     # user,
 )
 

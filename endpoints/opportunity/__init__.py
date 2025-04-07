@@ -1,13 +1,16 @@
 from . import (
-    industry,
-    language,
-    opportunity,
-    provider,
+    # TODO: revert changes, once this branch is merged
+    form,
+    # industry,
+    # language,
+    # opportunity,
+    # provider,
     response,
-    tag,
+    # tag,
 )
 
 __all__ = [
+    'form',
     'industry',
     'language',
     'opportunity',
