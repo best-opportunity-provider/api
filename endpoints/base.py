@@ -1,17 +1,19 @@
-from typing import Annotated
 from random import choice
 
-from database.models.api import APIKey as _APIKey
 from database.models.pydantic_base import ObjectId
 import pydantic
 
 from config import app
+from middleware.base import APIKey
 
 
-__all__ = ['app']
-
-type APIKey = Annotated[str, pydantic.Field(pattern=_APIKey.API_KEY_REGEX)]
-type ID = ObjectId
+__all__ = [
+    'app',
+    'APIKey',
+    'ObjectId',
+    'BaseQueryParams',
+    'escape_for_regex',
+]
 
 
 def generate_object_id() -> str:
