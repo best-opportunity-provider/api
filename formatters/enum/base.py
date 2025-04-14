@@ -1,5 +1,4 @@
 from typing import Protocol
-from enum import Enum
 
 from ..base import (
     Error,
@@ -7,11 +6,11 @@ from ..base import (
 )
 
 
-class ErrorTransformer[E: Enum](Protocol):
+class ErrorTransformer[E](Protocol):
     def __call__(self, error_code: E, **kwargs) -> tuple[Error, list[str]] | None: ...
 
 
-class ErrorAppender[E: Enum]:
+class ErrorAppender[E]:
     def __init__(self, transformer: ErrorTransformer[E]):
         self.transformer = transformer
 
