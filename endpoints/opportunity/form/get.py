@@ -6,7 +6,6 @@ from enum import IntEnum
 
 from fastapi import (
     Query,
-    Body,
     Depends,
 )
 from fastapi.responses import JSONResponse
@@ -14,10 +13,6 @@ from fastapi.responses import JSONResponse
 from ...base import (
     app,
     ObjectId,
-)
-from database.models.opportunity.form import (
-    OpportunityFormModel,
-    CreateFieldErrorCode,
 )
 from formatters import (
     Language,
@@ -28,15 +23,14 @@ import middleware
 
 class ErrorCode(IntEnum):
     INVALID_OPPORTUNITY_ID = 202
-    PHONE_NUMBER_FIELD_INVALID_COUNTRY_ID = 203
+    OPPORTUNITY_WITHOUT_FORM = 203
 
 
-@app.post('/{language}/private/opportunity/form')
-async def create(
+@app.get('/{language}/opportunity/form')
+async def get(
     language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
-    body: Annotated[OpportunityFormModel, Body()],
-    api_key: Annotated[Any | ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
+    api_key: Annotated[Any | ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
 ) -> JSONResponse:
     if isinstance(api_key, ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
@@ -48,17 +42,14 @@ async def create(
     )
     if isinstance(opportunity, ErrorTrace):
         return JSONResponse(opportunity.to_underlying(), status_code=422)
-    form = middleware.form.create_opportunity_form(
-        opportunity,
-        body,
+    form = middleware.getters.get_opportunity_form_by_id(
+        opportunity_id,
         language=language,
-        error_code_mapping={
-            CreateFieldErrorCode.PHONE_NUMBER_INVALID_COUNTRY_ID: (
-                ErrorCode.PHONE_NUMBER_FIELD_INVALID_COUNTRY_ID.value
-            ),
-        },
-        model_path=['body'],
+        error_code=ErrorCode.OPPORTUNITY_WITHOUT_FORM.value,
+        path=['query', 'opportunity_id'],
     )
     if isinstance(form, ErrorTrace):
         return JSONResponse(form.to_underlying(), status_code=422)
-    return JSONResponse({'id': opportunity_id})
+    # IMPORTANT: `fmt.Language` and `database.Language` are different enums, but
+    #            we rely on that their definitions are identical
+    return JSONResponse(form.to_dict(language))

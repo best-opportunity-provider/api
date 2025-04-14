@@ -16,29 +16,27 @@ from ...base import (
     ObjectId,
 )
 from database.models.opportunity.form import (
-    OpportunityFormModel,
     CreateFieldErrorCode,
+    UpdateOpportunityFormModel,
 )
-from formatters import (
-    Language,
-    ErrorTrace,
-)
+import formatters as fmt
 import middleware
 
 
 class ErrorCode(IntEnum):
     INVALID_OPPORTUNITY_ID = 202
-    PHONE_NUMBER_FIELD_INVALID_COUNTRY_ID = 203
+    OPPORTUNITY_WITHOUT_FORM = 203
+    PHONE_NUMBER_FIELD_INVALID_COUNTRY_ID = 204
 
 
-@app.post('/{language}/private/opportunity/form')
-async def create(
-    language: Language,
+@app.patch('/{language}/private/opportunity/form')
+async def update(
+    language: fmt.Language,
     opportunity_id: Annotated[ObjectId, Query()],
-    body: Annotated[OpportunityFormModel, Body()],
-    api_key: Annotated[Any | ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
+    body: Annotated[UpdateOpportunityFormModel, Body()],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    if isinstance(api_key, ErrorTrace):
+    if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
     opportunity = middleware.getters.get_opportunity_by_id(
         opportunity_id,
@@ -46,10 +44,18 @@ async def create(
         error_code=ErrorCode.INVALID_OPPORTUNITY_ID.value,
         path=['query', 'opportunity_id'],
     )
-    if isinstance(opportunity, ErrorTrace):
+    if isinstance(opportunity, fmt.ErrorTrace):
         return JSONResponse(opportunity.to_underlying(), status_code=422)
-    form = middleware.form.create_opportunity_form(
-        opportunity,
+    form = middleware.getters.get_opportunity_form_by_id(
+        opportunity_id,
+        language=language,
+        error_code=ErrorCode.OPPORTUNITY_WITHOUT_FORM.value,
+        path=['query', 'opportunity_id'],
+    )
+    if isinstance(form, fmt.ErrorTrace):
+        return JSONResponse(form.to_underlying(), status_code=422)
+    errors = middleware.form.update_opportunity_form(
+        form,
         body,
         language=language,
         error_code_mapping={
@@ -59,6 +65,6 @@ async def create(
         },
         model_path=['body'],
     )
-    if isinstance(form, ErrorTrace):
-        return JSONResponse(form.to_underlying(), status_code=422)
-    return JSONResponse({'id': opportunity_id})
+    if isinstance(errors, fmt.ErrorTrace):
+        return JSONResponse(errors.to_underlying(), status_code=422)
+    return JSONResponse({})
