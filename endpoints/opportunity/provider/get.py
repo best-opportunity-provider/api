@@ -11,84 +11,70 @@ import pydantic
 from pydantic_core import PydanticCustomError
 
 from ...base import (
-    ID,
-    BaseQueryParams,
-    app,
+    ObjectId,
     APIKey,
 )
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import OpportunityProvider
 
 import formatters as fmt
-class QueryParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
+import middleware
 
-    regex: str = '*'
-    api_key: APIKey
-    lang: Language
 
-    @pydantic.field_validator('regex')
-    @classmethod
-    def validate_regex(cls, regex: str) -> str:
-        try:
-            re.compile(str)
-        except re.PatternError:
-            raise PydanticCustomError(
-                'pattern_error', 'Provider filter should be a valid regular expression'
-            )
-
-class QueryParamsByID(BaseQueryParams):
-    model_config = {'extra': 'ignore'}
-
-    id: ID
-
-class DBError(IntEnum):
+class ErrorCode(IntEnum):
     INVALID_PROVIDER_ID = 200
-
-appender = fmt.enum.ErrorAppender[DBError](
-    transformer=fmt.enum.transformers.DictErrorTransformer(
-        {
-            DBError.INVALID_PROVIDER_ID: fmt.enum.Error(
-                type=fmt.enum.infer,
-                message=fmt.TranslatedString(
-                    en='Provider with provided ID doesn\'t exist',
-                    ru='Провайдер с таким идентификатором не существует',
-                ),
-                path=['body', 'provider', 'id']
-            ),
-        }
-    )
-)
+    INVALID_REGEX = 201
 
 
-@app.get('/{language}/opportunity')
-async def get(language: Language, query: Annotated[QueryParamsByID, Query()]) -> JSONResponse:
-    formatted_errors = fmt.ErrorTrace()
-    if (instance := OpportunityProvider.objects.get(id=query.id)) is not None:
-        return JSONResponse(instance, status_code=200)
-    appender(formatted_errors, DBError.INVALID_PROVIDER_ID, language)
-    return JSONResponse(formatted_errors.to_underlying())
-
-
-@app.get('/opportunity-provider')
-async def get_all(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    providers = OpportunityProvider.get_all(regex=query.regex)
+@app.get('/opportunity-provider/all')
+async def get_all_providers(
+    api_key: Annotated[
+        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+    ],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    providers = OpportunityProvider.get_all()
     return providers
 
-# @app.get('/opportunity-provider')
-async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    response = choice(
-        [
-            None,
-            JSONResponse({}, status_code=401),
-            JSONResponse({}, status_code=500),
-        ]
+
+@app.get('/opportunity-provider/id')
+async def get_provider_by_id(
+    language: fmt.Language,
+    provider_id: Annotated[ObjectId, Query()],
+    api_key: Annotated[
+        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+    ],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    provider = middleware.getters.get_provider_by_id(
+        provider_id,
+        language=language,
+        error_code=ErrorCode.INVALID_PROVIDER_ID.value,
+        path=['query', 'provider_id'],
     )
-    if response is not None:
-        return response
-    return JSONResponse(
-        ['Yandex', 'UDC'],
-        status_code=200,
+    if isinstance(provider, fmt.ErrorTrace):
+        return JSONResponse(provider.to_underlying(), status_code=422)
+    return JSONResponse(provider.to_dict(language))
+
+
+@app.get('/{language}/opportunity-provider')
+async def get_provider_by_regex(
+    language: fmt.Language,
+    search: Annotated[str, Query()],
+    api_key: Annotated[
+        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+    ],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    regex = middleware.regex.validate_regex(
+        regex,
+        error_code=ErrorCode.INVALID_REGEX.value,
+        path=['query', 'provider_regex'],
     )
+    if isinstance(regex, fmt.ErrorTrace):
+        return JSONResponse(regex.to_underlying(), status_code=422)
+    providers = OpportunityProvider.get_all(regex=regex)
+    return JSONResponse(providers)

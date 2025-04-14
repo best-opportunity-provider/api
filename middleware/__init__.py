@@ -3,6 +3,7 @@ from . import (
     form,
     getters,
     response,
+    regex
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     'form',
     'getters',
     'response',
+    'regex'
 ]

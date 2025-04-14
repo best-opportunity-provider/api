@@ -6,10 +6,8 @@ from fastapi.responses import JSONResponse
 import pydantic
 
 from ...base import (
-    app,
+    ObjectId,
     APIKey,
-    ID,
-    generate_object_id,
 )
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import Opportunity

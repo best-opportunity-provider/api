@@ -3,8 +3,8 @@ from . import (
     form,
     # industry,
     # language,
-    # opportunity,
-    # provider,
+    opportunity,
+    provider,
     response,
     # tag,
 )
