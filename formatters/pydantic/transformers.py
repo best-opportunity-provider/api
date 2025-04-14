@@ -162,13 +162,13 @@ class IntErrorTransformer:
             en='Field must be an integer',
             ru='Поле должно быть целым числом',
         )
-        GE = TranslatedString(
+        LE = TranslatedString(
             en='Field must be greater than or equal to {}',
             ru='Поле должно быть меньше или равно {}',
         )
-        LE = TranslatedString(
+        GE = TranslatedString(
             en='Field must be less than or equal to {}',
-            ru='Поле должно быть меньше или равно {}',
+            ru='Поле должно быть больше или равно {}',
         )
 
     def __init__(self, *, lower_bound: int | None = None, upper_bound: int | None = None):
@@ -219,12 +219,16 @@ class StringErrorTransformer:
             ru='Поле должно быть строкой',
         )
         TOO_SHORT = TranslatedString(
-            en='Field must contain at least {} characters',
-            ru='Поле должно содержать не менее {} символов',
+            en='Field must contain at least {} character(s)',
+            ru='Поле должно содержать не менее {} символа(ов)',
         )
         TOO_LONG = TranslatedString(
-            en='Field can contain at most {} characters',
-            ru='Поле может содержать не более {} символов',
+            en='Field can contain at most {} character(s)',
+            ru='Поле может содержать не более {} символа(ов)',
+        )
+        INVALID_PATTERN = TranslatedString(
+            en='Field has wrong format',
+            ru='Поле имеет неправильный формат',
         )
 
     def __init__(self, *, min_length: int | None = None, max_length: int | None = None):
@@ -247,6 +251,28 @@ class StringErrorTransformer:
                 return Error(
                     type=ErrorCode.LENGTH_NOT_IN_RANGE.value,
                     message=self.Errors.TOO_LONG.get_translation(language).format(self.max_length),
+                )
+            case 'string_pattern_mismatch':
+                return Error(
+                    type=ErrorCode.INVALID_PATTERN.value,
+                    message=self.Errors.INVALID_PATTERN.get_translation(language),
+                )
+
+
+@extend_and_override(MissingErrorTransformer)
+class DateErrorTransformer:
+    class Errors:
+        TYPE = TranslatedString(
+            en='Field must be a date',
+            ru='Поле должно быть датой',
+        )
+
+    def __call__(self, error_code: str, *, language: Language, **kwargs) -> Error | None:
+        match error_code:
+            case 'date_parsing' | 'date_type':
+                return Error(
+                    type=ErrorCode.WRONG_TYPE.value,
+                    message=self.Errors.TYPE.get_translation(language),
                 )
 
 
@@ -319,11 +345,12 @@ class DictErrorTransformer:
         super().__init__(min_length=min_length, max_length=max_length)
 
     def __call__(self, error_code: str, *, language: Language, **kwargs) -> Error | None:
-        if error_code == 'dict_type':
-            return Error(
-                type=ErrorCode.WRONG_TYPE.value,
-                message=self.Errors.TYPE.get_translation(language),
-            )
+        match error_code:
+            case 'dict_type' | 'model_type':
+                return Error(
+                    type=ErrorCode.WRONG_TYPE.value,
+                    message=self.Errors.TYPE.get_translation(language),
+                )
 
 
 @extend_and_override(DictErrorTransformer, error_bases=[RootListErrorTransformer])

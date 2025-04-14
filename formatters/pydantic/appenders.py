@@ -13,7 +13,7 @@ class FieldErrorAppender(ErrorAppender):
         assert len(path) == 0
         error = self.transformer(error_code, **kwargs)
         if error is None:
-            raise ValueError('Unhandled error kind')
+            raise ValueError(f'Unhandled error kind: {error_code}')
         assert not isinstance(trace.errors, dict)
         if trace.errors is None:
             trace.errors = []
@@ -40,10 +40,10 @@ class DictErrorAppender(ErrorAppender):
     def append_error(self, trace: ErrorTrace, error_code: str, path: list[str], **kwargs) -> None:
         if len(path) == 0:  # error on top level of dict, excludes possibility for inner errors
             if self.root_transformer is None:
-                raise ValueError('Unhandled error path')
+                raise ValueError(f'Unhandled error path: {path}')
             error = self.root_transformer(error_code, **kwargs)
             if error is None:
-                raise ValueError('Unhandled error kind')
+                raise ValueError(f'Unhandled error kind: {error_code}')
             assert not isinstance(trace.errors, dict)
             if trace.errors is None:
                 trace.errors = []
@@ -61,7 +61,7 @@ class DictErrorAppender(ErrorAppender):
         elif self.extra_appender is not None:
             self.extra_appender(trace.errors[element_field_name], error_code, path[1:], **kwargs)
         else:
-            raise ValueError('Unhandled error path')
+            raise ValueError(f'Unhandled error path: {path}')
 
     def __call__(self, trace: ErrorTrace, error_code: str, path: list[str], **kwargs) -> None:
         self.append_error(trace, error_code, path, **kwargs)
@@ -83,10 +83,10 @@ class ListErrorAppender(ErrorAppender):
     def append_error(self, trace: ErrorTrace, error_code: str, path: list[str], **kwargs) -> None:
         if len(path) == 0:  # error on top level of list, excludes possibility for inner errors
             if self.root_transformer is None:
-                raise ValueError('Unhandled error path')
+                raise ValueError(f'Unhandled error path: {path}')
             error = self.root_transformer(error_code, **kwargs)
             if error is None:
-                raise ValueError('Unhandled error kind')
+                raise ValueError(f'Unhandled error kind: {error_code}')
             assert not isinstance(trace.errors, dict)
             if trace.errors is None:
                 trace.errors = []
