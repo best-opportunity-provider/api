@@ -24,11 +24,3 @@ def escape_for_regex(string: str) -> str:
     import re
 
     return re.escape(string)
-
-
-class BaseQueryParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-
-    api_key: APIKey

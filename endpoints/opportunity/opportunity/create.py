@@ -10,13 +10,15 @@ from database.models.geo import Place, PlaceModel
 from database.models.trans_string.embedded import TransString, TransStringModel
 
 from ...base import (
-    app,
-    BaseQueryParams,
+    app
 )
+from database import DeveloperAPIKey
 from database.models.trans_string import Language
 from database.models.opportunity import opportunity
+import middleware
 
-class BodyParams(pydantic.BaseModel):
+
+class OpportunityCreateBodyParams(pydantic.BaseModel):
     model_config = {
         'extra': 'ignore',
     }
@@ -35,7 +37,8 @@ class BodyParams(pydantic.BaseModel):
 
 @app.post('/private/opportunity')
 async def create(
-    body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
+    body: Annotated[OpportunityCreateBodyParams, Body()],
+    api_key: Annotated[DeveloperAPIKey | ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
     instance = opportunity.Opportunity.create(
         body.fallback_language,
