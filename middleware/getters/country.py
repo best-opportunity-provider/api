@@ -4,9 +4,9 @@ from ..base import ObjectId
 import formatters as fmt
 
 
-def error_fn(*, error_code: int, path: list[str], **kwargs) -> fmt.enum.Error:
+def error_fn(*, transformed_error_code: int, path: list[str], **kwargs) -> fmt.enum.Error:
     return fmt.enum.Error(
-        type=error_code,
+        type=transformed_error_code,
         message=fmt.TranslatedString(
             en="Country with provided id doesn't exist",
             ru='Страны с таким идентификатором не существует',
@@ -34,7 +34,7 @@ def get_country_by_id(
             error,
             None,
             language=language,
-            error_code=error_code,
+            transformed_error_code=error_code,
             path=path,
         )
         return error
