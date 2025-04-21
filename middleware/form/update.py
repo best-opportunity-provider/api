@@ -18,7 +18,9 @@ def handle_phone_number_invalid_country_id(
     **kwargs,
 ) -> fmt.enum.Error:
     return getters.country.error_fn(
-        error_code=error_code_mapping[CreateFieldErrorCode.PHONE_NUMBER_INVALID_COUNTRY_ID],
+        transformed_error_code=error_code_mapping[
+            CreateFieldErrorCode.PHONE_NUMBER_INVALID_COUNTRY_ID
+        ],
         path=[*model_path, 'fields', context[0], 'whitelist', str(context[1])],
     )
 
