@@ -28,21 +28,13 @@ from database.models.trans_string.embedded import ContainedTransString, Containe
 import formatters as fmt
 from ...base import (
     app,
-    ID,
-    BaseQueryParams,
+    ObjectId,
 )
 
-class QueryParams(BaseQueryParams):
-    id: ID
 
-class BodyParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-    name: ContainedTransStringModel
+class ErrorCode(IntEnum):
+    INVALID_OPPORTUNITY_ID = 202
 
-class DBError(IntEnum):
-    INVALID_OPPORTUNITY_ID = 200
 
 appender = fmt.enum.ErrorAppender[DBError](
     transformer=fmt.enum.transformers.DictErrorTransformer(
@@ -59,7 +51,7 @@ appender = fmt.enum.ErrorAppender[DBError](
     )
 )
 
-class BodyParams(pydantic.BaseModel):
+class OpportunityUpdateBodyParams(pydantic.BaseModel):
     model_config = {
         'extra': 'ignore',
     }
@@ -77,24 +69,49 @@ class BodyParams(pydantic.BaseModel):
 
 @app.patch("/{language}/private/opportunity")
 async def patch(
-    language: Language, body: Annotated[BodyParams, Body()], query: Annotated[QueryParams, Query()]   
-) -> Response:
-    formatted_errors = fmt.ErrorTrace()
-    if (old_instance := opportunity.Opportunity.objects.get(id=query.id)) is None:
-        appender(formatted_errors, DBError.INVALID_OPPORTUNITY_ID, language)
-    if len(formatted_errors.errors) == 0:
-        instance = opportunity.Opportunity.update(
-            old_instance,
-            body.fallback_language,
-            body.name,
-            body.short_description,
-            body.source,
-            body.provider,
-            body.industry,
-            body.tags,
-            body.languages,
-            body.places,
-            body.sections,
-        )
-        return JSONResponse({'id': instance.id})
-    return JSONResponse(formatted_errors.to_underlying())
+    language: Language,
+    opportunity_id: Annotated[ObjectId, Query()],
+    body: Annotated[OpportunityUpdateBodyParams, Body()],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+
+    opportunity = middleware.getters.get_opportunity_by_id(
+        opportunity_id,
+        language=language,
+        error_code=ErrorCode.INVALID_OPPORTUNITY_ID.value,
+        path=['query', 'opportunity_id'],
+    )
+    if isinstance(opportunity, fmt.ErrorTrace):
+        return JSONResponse(opportunity.to_underlying(), status_code=422)
+
+    raw_errors = opportunity.update(body)
+    if raw_errors is None:
+        return JSONResponse({})
+    return JSONResponse(errors.to_underlying(), status_code=422)
+
+    # formatted_errors = fmt.ErrorTrace()
+    # for raw_error in raw_errors:
+    #     error_appender(
+    #         formatted_errors,
+    #         raw_error.error_code,
+    #         context=raw_error.context,
+    #         language=language,
+    #         error_code_mapping=error_code_mapping,
+    #         model_path=model_path,
+    #     )
+    # return formatted_errors
+
+    # errors = middleware.form.update_opportunity_form(
+    #     form,
+    #     body,
+    #     language=language,
+    #     error_code_mapping={
+    #         CreateFieldErrorCode.PHONE_NUMBER_INVALID_COUNTRY_ID: (
+    #             ErrorCode.PHONE_NUMBER_FIELD_INVALID_COUNTRY_ID.value
+    #         ),
+    #     },
+
+    #     model_path=['body'],
+    # )

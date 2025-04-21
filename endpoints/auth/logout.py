@@ -5,12 +5,16 @@ from random import choice
 
 from database.models.api import PersonalAPIKey
 
-from ..base import BaseQueryParams, app
+from ..base import app
 
 
 @app.post('/logout')
-async def logout(query: Annotated[BaseQueryParams, Query()]) -> JSONResponse:
-    PersonalAPIKey.get(query.api_key).expire()
+async def logout(
+    api_key: Annotated[Any | ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+) -> JSONResponse:
+    if isinstance(api_key, ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    PersonalAPIKey.get(api_key).expire()
     return JSONResponse({})
 
 
