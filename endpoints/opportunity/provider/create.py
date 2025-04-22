@@ -13,7 +13,6 @@ from database.models.trans_string.embedded import ContainedTransString, Containe
 
 from ...base import (
     app,
-    BaseQueryParams,
 )
 from database.models.trans_string import Language
 from database.models.geo import (

@@ -1,7 +1,7 @@
 from . import (
     # TODO: revert changes, once this branch is merged
     form,
-    # industry,
+    industry,
     # language,
     opportunity,
     provider,

@@ -2,11 +2,11 @@ from enum import IntEnum
 from typing import Annotated
 from random import choice
 
-from fastapi import Query
+from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
 import pydantic
 
-from ...base import (
+from ....base import (
     ObjectId,
     APIKey,
     app,
@@ -14,6 +14,7 @@ from ...base import (
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import Opportunity
 
+from database import PersonalAPIKey
 import formatters as fmt
 import middleware
 

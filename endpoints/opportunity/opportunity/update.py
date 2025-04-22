@@ -5,11 +5,12 @@ from typing import (
     Annotated,
     Self,
     Literal,
+    Any
 )
 from random import choice
 from enum import IntEnum
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse, Response
 import pydantic
 from pydantic_core import PydanticCustomError
@@ -26,6 +27,7 @@ from database.models.geo import (
 from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel, TransString
 
 import formatters as fmt
+import middleware
 from ...base import (
     app,
     ObjectId,
@@ -36,42 +38,27 @@ class ErrorCode(IntEnum):
     INVALID_OPPORTUNITY_ID = 202
 
 
-appender = fmt.enum.ErrorAppender[DBError](
+appender = fmt.enum.ErrorAppender[ErrorCode](
     transformer=fmt.enum.transformers.DictErrorTransformer(
         {
-            DBError.INVALID_OPPORTUNITY_ID: fmt.enum.Error(
+            ErrorCode.INVALID_OPPORTUNITY_ID: fmt.enum.Error(
                 type=fmt.enum.infer,
                 message=fmt.TranslatedString(
                     en='Opportunity industry with provided ID doesn\'t exist',
-                    ru='Индустрии с таким идентификатором не существует',
+                    ru='Возможности с таким идентификатором не существует',
                 ),
-                path=['body', 'industry', 'id'] #TODO: ...
+                path=['body', 'industry', 'id']
             ),
         }
     )
 )
 
-class OpportunityUpdateBodyParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-
-    fallback_language: Language
-    name: TransString
-    short_description: TransString
-    source: opportunity.OpportunitySource
-    provider: opportunity.OpportunityProvider
-    industry: opportunity.OpportunityIndustry
-    tags: list[opportunity.OpportunityTag]
-    languages: list[opportunity.OpportunityLanguage]
-    places: list[Place]
-    sections: list[opportunity.OpportunitySection]
 
 @app.patch("/{language}/private/opportunity")
 async def patch(
     language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
-    body: Annotated[OpportunityUpdateBodyParams, Body()],
+    body: Annotated[opportunity.UpdateOpportunityModel, Body()],
     api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):

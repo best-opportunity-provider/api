@@ -1,16 +1,21 @@
 from typing import Annotated
 from random import choice
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse
 import pydantic
 
 from ...base import (
     ObjectId,
     APIKey,
+    app,
 )
+from database import PersonalAPIKey
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import Opportunity
+
+import formatters as fmt
+import middleware
 
 
 class OpportunityFilterBodyParams(pydantic.BaseModel):

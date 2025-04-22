@@ -11,7 +11,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
-from ...base import (
+from ....base import (
     app,
     ObjectId,
 )
@@ -31,7 +31,7 @@ class ErrorCode(IntEnum):
 async def update_section(
     language: fmt.Language,
     section_id: Annotated[ObjectId, Query()],
-    body: Annotated[UpdateOpportunityFormModel, Body()],
+    body: Annotated[OpportunitySectionModels, Body()],
     api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
