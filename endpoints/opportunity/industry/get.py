@@ -35,7 +35,9 @@ async def get(
         error_code=ErrorCode.INVALID_INDUSTRY_ID.value,
         path=['body', 'industry', 'id'],
     )
-    return industry
+    if isinstance(industry, fmt.ErrorTrace):
+        return JSONResponse(industry.to_underlying(), status_code=422)
+    return industry.to_dict(language)
 
 
 # @app.get('/opportunity-industry')

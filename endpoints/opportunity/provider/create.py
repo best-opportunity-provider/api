@@ -33,4 +33,4 @@ class BodyParams(pydantic.BaseModel):
 async def create(body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
 ) -> JSONResponse:
     instance = opportunity.OpportunityProvider.create(body.name)
-    return JSONResponse({'id': instance.id})
+    return JSONResponse({'id': str(instance.id)})

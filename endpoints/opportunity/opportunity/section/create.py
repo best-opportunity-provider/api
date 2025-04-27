@@ -57,4 +57,4 @@ async def create(
         return JSONResponse(opp.to_underlying(), status_code=422)
     instance = opportunity.OpportunitySection.create(body.title, body.content)
     opp.update(push__sections=instance)
-    return JSONResponse({'id': instance.id})
+    return JSONResponse({'id': str(instance.id)})

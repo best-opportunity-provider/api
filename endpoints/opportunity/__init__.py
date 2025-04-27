@@ -1,12 +1,11 @@
 from . import (
-    # TODO: revert changes, once this branch is merged
     form,
     industry,
-    # language,
+    language,
     opportunity,
     provider,
     response,
-    # tag,
+    tag
 )
 
 __all__ = [

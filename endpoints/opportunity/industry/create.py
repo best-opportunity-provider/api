@@ -28,4 +28,4 @@ async def create_industry(
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
     instance = opportunity.OpportunityIndustry.create(body.name)
-    return JSONResponse({'id': instance.id})
+    return JSONResponse({'id': str(instance.id)})

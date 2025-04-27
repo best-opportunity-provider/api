@@ -60,4 +60,4 @@ async def create(
         body.category,
         industry
     )
-    return JSONResponse({'id': instance.id})
+    return JSONResponse({'id': str(instance.id)})

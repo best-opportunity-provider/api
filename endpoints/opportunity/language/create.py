@@ -1,31 +1,28 @@
-# TODO:
-#   1. POST /private/opportunity-language?api_key={}
 from typing import Annotated
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse
+
 import pydantic
 
 from ...base import (
     app,
-    BaseQueryParams,
 )
+from database import DeveloperAPIKey
 from database.models.trans_string import Language
 from database.models.opportunity import opportunity
 
-
-class BodyParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-
-    name: str
-    language: Language
+import formatters as fmt
+import middleware
 
 
-@app.post('/private/opportunity-language')
-async def create(
-    body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
+@app.post('/{language}/private/opportunity-language')
+async def create_language(
+    language: Language,
+    body: Annotated[opportunity.OpportunityLanguageModel, Body()],
+    api_key: Annotated[DeveloperAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    instance = opportunity.OpportunityLanguage.create(body.name, body.language)
-    return JSONResponse({'id': instance.id})
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    instance = opportunity.OpportunityLanguage.create(name=body.name)
+    return JSONResponse({'id': str(instance.id)})

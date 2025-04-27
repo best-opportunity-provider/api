@@ -1,29 +1,28 @@
-# TODO:
-#   1. POST /private/opportunity-tag?api_key={}
 from typing import Annotated
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse
 
 import pydantic
 
-from database.models.opportunity import opportunity
-from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
-
 from ...base import (
     app,
-    BaseQueryParams,
 )
-class BodyParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
+from database import DeveloperAPIKey
+from database.models.trans_string import Language
+from database.models.opportunity import opportunity
 
-    name: ContainedTransStringModel
+import formatters as fmt
+import middleware
 
 
-@app.post('private/opportunity-tag')
-async def create(body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
+@app.post('/{language}/private/opportunity-tag')
+async def create_tag(
+    language: Language,
+    body: Annotated[opportunity.OpportunityTagModel, Body()],
+    api_key: Annotated[DeveloperAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    instance = opportunity.OpportunityTag.create(body.name)
-    return JSONResponse({'id': instance.id})
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    instance = opportunity.OpportunityTag.create(name=body.name)
+    return JSONResponse({'id': str(instance.id)})
