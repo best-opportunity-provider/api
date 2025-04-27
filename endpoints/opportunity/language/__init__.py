@@ -1,11 +1,9 @@
 from . import (
     create,
-    get,
-    update,
+    get
 )
 
 __all__ = [
     'create',
-    'get',
-    'update',
+    'get'
 ]

@@ -65,5 +65,5 @@ async def patch(
         instance = opportunity.OpportunityProvider.update(
             old_instance,
         )
-        return JSONResponse({'id': instance.id})
+        return JSONResponse({'id': str(instance.id)})
     return JSONResponse(formatted_errors.to_underlying())

@@ -1,27 +1,30 @@
 from typing import Annotated
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse
+
+import pydantic
 
 from ...base import (
     app,
-    BaseQueryParams,
 )
+from database import DeveloperAPIKey
+from database.models.trans_string import Language
 from database.models.geo import (
     Place,
     PlaceModel,
 )
-from formatters import Language
+
+import formatters as fmt
+import middleware
 
 
-@app.post('/{language}/private/place')
-async def create(
-    language: Language,
+@app.post('/private/place')
+async def create_place(
     body: Annotated[PlaceModel, Body()],
-    query: Annotated[BaseQueryParams, Query()],
+    api_key: Annotated[DeveloperAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    # TODO: retrieve actual `Country`/`City` instances from body and use them to create `Place`
-    ...
-    # INVALID:
-    # instance = Place.create(body.name, body.language, body.location)
-    # return JSONResponse({'id': instance.id})
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    instance = Place.create(name=body.name, location=body.location)
+    return JSONResponse({'id': str(instance.id)})

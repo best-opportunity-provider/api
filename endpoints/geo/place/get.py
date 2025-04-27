@@ -1,70 +1,52 @@
 from enum import IntEnum
-from typing import Annotated
+from typing import Annotated, Any
+from random import choice
 
-from fastapi import Query
+from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
+import pydantic
 
 from ...base import (
-    ID,
-    BaseQueryParams,
-    escape_for_regex,
     app,
+    ObjectId
 )
-from database.models.geo import Place
+from database.models.trans_string import Language
+from database.models.geo import City, Country, Place
+
 import formatters as fmt
-from formatters import Language
+import middleware
 
 
-class GetByIdQueryParams(BaseQueryParams):
-    id: ID
-
-
-class GetByIdError(IntEnum):
-    INVALID_ID = 200
-
-
-appender = fmt.enum.ErrorAppender[GetByIdError](
-    transformer=fmt.enum.transformers.DictErrorTransformer(
-        {
-            GetByIdError.INVALID_ID: fmt.enum.Error(
-                type=fmt.enum.infer,
-                message=fmt.TranslatedString(
-                    en="Place with provided ID doesn't exist",
-                    ru='Локации с таким идентификатором не существует',
-                ),
-                path=['query', 'id'],
-            ),
-        }
-    )
-)
+class ErrorCode(IntEnum):
+    INVALID_PLACE_ID = 200
 
 
 @app.get('/{language}/place')
-async def get(
+async def get_place(
     language: Language,
-    query: Annotated[GetByIdQueryParams, Query()],
+    place_id: Annotated[ObjectId, Query()],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
 ) -> JSONResponse:
-    instance: Place | None = Place.objects.get(id=query.id)
-    if instance is None:
-        formatted_errors = fmt.ErrorTrace()
-        appender(formatted_errors, GetByIdError.INVALID_ID, language=language)
-        return JSONResponse(formatted_errors, status_code=403)
-    # TODO: return dict representation of a `Place`
-    return JSONResponse({})
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    place = middleware.getters.get_place_by_id(
+        place_id,
+        language=language,
+        error_code=ErrorCode.INVALID_PLACE_ID.value,
+        path=['body', 'place', 'id'],
+    )
+    if isinstance(industry, fmt.ErrorTrace):
+        return JSONResponse(place.to_underlying(), status_code=422)
+    return place.to_dict(language)
 
 
-class GetAllQueryParams(BaseQueryParams):
-    filter: str | None = None
-
-
-@app.get('/{language}/places')
-async def get_all(
+@app.get('/{language}/place/all')
+async def get_all_languages(
     language: Language,
-    query: Annotated[GetAllQueryParams, Query()],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+    regex: str
 ) -> JSONResponse:
-    if query.filter is None:
-        places = Place.get_all()
-    else:
-        places = Place.get_all(regex=escape_for_regex(query.filter))
-    # TODO: return list of dicts with representations of `Place`s
-    return JSONResponse([])
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    places = Place.get_all(regex=escape_for_regex(regex))
+    return JSONResponse([i.to_dict(language) for i in places])

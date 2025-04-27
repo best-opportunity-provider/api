@@ -2,11 +2,11 @@
 #   1. PATCH /private/opportunity-industry?id={}&api_key={}
 
 from typing import (
-    Annotated,
+    Annotated, Any
 )
 from enum import IntEnum
 
-from fastapi import Query, Body
+from fastapi import Query, Body, Depends
 from fastapi.responses import JSONResponse, Response
 import pydantic
 
@@ -16,35 +16,27 @@ from database.models.trans_string import Language
 from database.models.trans_string.embedded import ContainedTransString, ContainedTransStringModel
 
 import formatters as fmt
+import middleware
 from ...base import (
     app,
-    ID,
-    BaseQueryParams,
+    ObjectId
 )
 
 
-class QueryParams(BaseQueryParams):
-    id: ID
-
-class BodyParams(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-    name: ContainedTransStringModel
-
-class DBError(IntEnum):
+class ErrorCode(IntEnum):
     INVALID_INDUSTRY_ID = 200
 
-appender = fmt.enum.ErrorAppender[DBError](
+
+appender = fmt.enum.ErrorAppender[ErrorCode](
     transformer=fmt.enum.transformers.DictErrorTransformer(
         {
-            DBError.INVALID_COUNTRY_ID: fmt.enum.Error(
+            ErrorCode.INVALID_INDUSTRY_ID: fmt.enum.Error(
                 type=fmt.enum.infer,
                 message=fmt.TranslatedString(
                     en='Opportunity industry with provided ID doesn\'t exist',
                     ru='Индустрии с таким идентификатором не существует',
                 ),
-                path=['body', 'location', 'id'] #TODO: ...
+                path=['body', 'industry', 'id']
             ),
         }
     )
@@ -52,12 +44,20 @@ appender = fmt.enum.ErrorAppender[DBError](
 
 @app.patch('/{language}/private/opportunity-industry')
 async def patch(
-    language: Language, body: Annotated[BodyParams, Body()], query: Annotated[QueryParams, Query()]   
+    language: Language,
+    industry_id: Annotated[ObjectId, Query()],
+    body: Annotated[opportunity.OpportunityIndustryModel, Body()],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    formatted_errors = fmt.ErrorTrace()
-    if (old_instance := opportunity.OpportunityIndustry.objects.get(id=query.id)) is None:
-        appender(formatted_errors, DBError.INVALID_INDUSTRY_ID, language)
-    if len(formatted_errors.errors) == 0:
-        instance = opportunity.OpportunityIndustry.update(old_instance, body.name)
-        return JSONResponse({'id': instance.id})
-    return JSONResponse(formatted_errors.to_underlying())
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    industry = middleware.getters.get_industry_by_id(
+        industry_id,
+        language=language,
+        error_code=ErrorCode.INVALID_INDUSTRY_ID.value,
+        path=['query', 'industry_id'],
+    )
+    if isinstance(industry, fmt.ErrorTrace):
+        return JSONResponse(industry.to_underlying(), status_code=422)
+    industry.update(body.name)
+    return JSONResponse({})

@@ -69,6 +69,6 @@ async def patch(
         appender(formatted_errors, DBError.INVALID_OPPORTUNITY_ID, language)
     if len(formatted_errors.errors) == 0:
         opportunity.Opportunity.set_logo(instance, body.logo)
-        return JSONResponse({'id': instance.id})
+        return JSONResponse({'id': str(instance.id)})
     return JSONResponse(formatted_errors.to_underlying())
     

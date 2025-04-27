@@ -1,76 +1,51 @@
 from enum import IntEnum
-from typing import Annotated
+from typing import Annotated, Any
 from random import choice
-import re
 
-from fastapi import Query
+from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
 import pydantic
-from pydantic_core import PydanticCustomError
 
 from ...base import (
-    ID,
-    BaseQueryParams,
     app,
-    APIKey,
+    ObjectId
 )
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import OpportunityLanguage
 
 import formatters as fmt
-class QueryParams(BaseQueryParams):
-    model_config = {
-        'extra': 'ignore',
-    }
-    lang: Language
+import middleware
 
-class QueryParamsByID(BaseQueryParams):
-    model_config = {'extra': 'ignore'}
 
-    id: ID
-
-class DBError(IntEnum):
+class ErrorCode(IntEnum):
     INVALID_LANGUAGE_ID = 200
 
-appender = fmt.enum.ErrorAppender[DBError](
-    transformer=fmt.enum.transformers.DictErrorTransformer(
-        {
-            DBError.INVALID_LANGUAGE_ID: fmt.enum.Error(
-                type=fmt.enum.infer,
-                message=fmt.TranslatedString(
-                    en='Language with provided ID doesn\'t exist',
-                    ru='Языка с таким идентификатором не существует',
-                ),
-                path=['body', 'language', 'id']
-            ),
-        }
+
+@app.get('/{language}/opportunity-language')
+async def get_language(
+    language: Language,
+    language_id: Annotated[ObjectId, Query()],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    instance = middleware.getters.get_language_by_id(
+        language_id,
+        language=language,
+        error_code=ErrorCode.INVALID_LANGUAGE_ID.value,
+        path=['body', 'language', 'id'],
     )
-)
+    if isinstance(instance, fmt.ErrorTrace):
+        return JSONResponse(instance.to_underlying(), status_code=422)
+    return instance.to_dict(language)
 
 
-@app.get('/{language}/opportunity')
-async def get(language: Language, query: Annotated[QueryParamsByID, Query()]) -> JSONResponse:
-    formatted_errors = fmt.ErrorTrace()
-    if (instance := OpportunityLanguage.objects.get(id=query.id)) is not None:
-        return JSONResponse(instance, status_code=200)
-    appender(formatted_errors, DBError.INVALID_LANGUAGE_ID, language)
-    return JSONResponse(formatted_errors.to_underlying())
-
-@app.get('/opportunity-language')
-async def get_all(query: Annotated[QueryParams, Query()]) -> JSONResponse:
+@app.get('/{language}/opportunity-language/all')
+async def get_all_languages(
+    language: Language,
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
     languages = OpportunityLanguage.get_all()
-    return languages
-
-# @app.get('/opportunity-language')
-async def get_mock(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-    response = choice(
-        None, 
-        JSONResponse({}, status_code=401),
-        JSONResponse({}, status_code=500),
-    )
-    if response is None:
-        return response
-    return JSONResponse(
-        ['English', 'Russian', 'Spanish', 'French'],
-        status_code=200,
-    )
+    return JSONResponse([i.to_dict(language) for i in languages])

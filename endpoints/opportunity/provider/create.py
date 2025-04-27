@@ -13,7 +13,6 @@ from database.models.trans_string.embedded import ContainedTransString, Containe
 
 from ...base import (
     app,
-    BaseQueryParams,
 )
 from database.models.trans_string import Language
 from database.models.geo import (
@@ -34,4 +33,4 @@ class BodyParams(pydantic.BaseModel):
 async def create(body: Annotated[BodyParams, Body()], query: Annotated[BaseQueryParams, Query()]
 ) -> JSONResponse:
     instance = opportunity.OpportunityProvider.create(body.name)
-    return JSONResponse({'id': instance.id})
+    return JSONResponse({'id': str(instance.id)})

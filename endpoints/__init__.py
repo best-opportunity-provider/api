@@ -3,7 +3,7 @@ from . import (
     # TODO: uncomment these, once all the errors are fixed
     # geo,
     opportunity,
-    # user,
+    user,
 )
 
 __all__ = [
