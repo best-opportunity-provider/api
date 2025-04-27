@@ -26,12 +26,13 @@ class ErrorCode(IntEnum):
     INVALID_INDUSTRY_ID = 201
 
 
-@app.post('/private/opportunity')
+@app.post('/{language}/private/opportunity')
 async def create(
+    language: Language,
     body: Annotated[CreateModel, Body()],
     api_key: Annotated[DeveloperAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    if isinstance(api_key, ErrorTrace):
+    if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
     provider = middleware.getters.get_provider_by_id(
         body.provider,
@@ -39,7 +40,7 @@ async def create(
         error_code=ErrorCode.INVALID_PROVIDER_ID.value,
         path=['query', 'opp_create', 'provider_id'],
     )
-    if isinstance(provider, ErrorTrace):
+    if isinstance(provider, fmt.ErrorTrace):
         return JSONResponse(provider.to_underlying(), status_code=422)
 
     industry = middleware.getters.get_industry_by_id(
@@ -48,14 +49,15 @@ async def create(
         error_code=ErrorCode.INVALID_INDUSTRY_ID.value,
         path=['query', 'opp_create', 'industry_id'],
     )
-    if isinstance(provider, ErrorTrace):
+    if isinstance(provider, fmt.ErrorTrace):
         return JSONResponse(industry.to_underlying(), status_code=422)
     
     instance = opportunity.Opportunity.create(
+        body.translations,
         body.fallback_language,
-        body.name,
-        body.short_description,
-        body.source,
+        body.name.to_field(),
+        body.short_description.to_field(),
+        body.source.to_field(),
         provider,
         body.category,
         industry

@@ -1,8 +1,8 @@
 from enum import IntEnum
-from typing import Annotated
+from typing import Annotated, Any
 from random import choice
 
-from fastapi import Query
+from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
 import pydantic
 
@@ -22,16 +22,17 @@ class ErrorCode(IntEnum):
     INVALID_OPPORTUNITY_ID = 200
 
 
-@app.get('/opportunity/all')
+@app.get('/{language}/opportunity/all')
 async def get_all_opportunities(
+    language: Language,
     api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
-    opportunities = Opportunity.get_all()
-    return opportunities
+    opportunities = Opportunity.get_all('')
+    return JSONResponse([i.to_dict(language) for i in opportunities])
 
 
 @app.get('/{language}/opportunity')
@@ -39,7 +40,7 @@ async def get_opportunity_by_id(
     language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
     api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
