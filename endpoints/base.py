@@ -1,7 +1,6 @@
 from random import choice
 
 from database.models.pydantic_base import ObjectId
-import pydantic
 
 from config import app
 from middleware.base import APIKey
@@ -11,7 +10,6 @@ __all__ = [
     'app',
     'APIKey',
     'ObjectId',
-    'BaseQueryParams',
     'escape_for_regex',
 ]
 

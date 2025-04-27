@@ -1,17 +1,20 @@
+from typing import Any
 from enum import IntEnum
 from typing import Annotated
-from random import choice
 
-from fastapi import Query
+from fastapi import (
+    Query,
+    Depends,
+)
 from fastapi.responses import JSONResponse
-import pydantic
 
 from ...base import (
+    app,
     ObjectId,
-    APIKey,
 )
 from database.models.trans_string import Language
-from database.models.opportunity.opportunity import Opportunity
+from database import Opportunity
+from database.models.user import UserTier
 
 import formatters as fmt
 import middleware
@@ -23,9 +26,7 @@ class ErrorCode(IntEnum):
 
 @app.get('/opportunity/all')
 async def get_all_opportunities(
-    api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
-    ],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
@@ -38,11 +39,11 @@ async def get_opportunity_by_id(
     language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
     api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+        Any | fmt.ErrorTrace, Depends(middleware.auth.GetPersonalAPIKeyWithTier(UserTier.PAID))
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
-        return JSONResponse(api_key.to_underlying(), status_code=403)
+        return JSONResponse(api_key.to_underlying(), status_code=api_key.error_code)
     opportunity = middleware.getters.get_opportunity_by_id(
         opportunity_id,
         language=language,

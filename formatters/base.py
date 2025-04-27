@@ -15,6 +15,7 @@ class ErrorTrace:
     type Underlying = dict[str, Underlying] | list[Error]
 
     errors: dict[str, 'ErrorTrace'] | list[Error] | None = None
+    error_code: int | None = None
 
     def to_underlying(self) -> Underlying:
         assert self.errors is not None

@@ -1,5 +1,4 @@
 from typing import Protocol
-from enum import Enum
 from dataclasses import dataclass
 
 from ..base import (
@@ -51,7 +50,7 @@ class SingleErrorTransformer(base.ErrorTransformer):
         )
 
 
-class DictErrorTransformer[E: Enum](base.ErrorTransformer):
+class DictErrorTransformer[E](base.ErrorTransformer):
     def __init__(self, errors: dict[E, Error | TransformerCallable]):
         self.errors = errors
 

@@ -28,9 +28,10 @@ class ErrorAppender[E]:
             trace.errors = []
         return trace.errors
 
-    def __call__(self, trace: ErrorTrace, error_code: E, **kwargs) -> None:
+    def __call__(self, trace: ErrorTrace, error_code: E, **kwargs) -> Error:
         transformed_error = self.transformer(error_code, **kwargs)
         if transformed_error is None:
             raise ValueError('Unhandled error kind')
         error, path = transformed_error
         self.get_errors_list(trace, path).append(error)
+        return error
