@@ -23,8 +23,16 @@ HOST: str = '127.0.0.1'
 PORT: int = 8001
 
 from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 # ===== Database config =====
 
@@ -48,4 +56,19 @@ connect_mongo_db(
     port=dbcfg.MONGO_PORT,
     db_name=dbcfg.MONGO_DB_NAME,
     auth_db_name=dbcfg.MONGO_AUTH_DB_NAME,
+)
+
+
+import minio  # noqa: E402
+
+
+def get_minio_client(access_key: str, secret_key: str, host: str, port: int) -> minio.Minio:
+    return minio.Minio(f'{host}:{port}', access_key=access_key, secret_key=secret_key, secure=False)
+
+
+minio_client = get_minio_client(
+    access_key=dbcfg.MINIO_ACCESS_KEY,
+    secret_key=dbcfg.MINIO_SECRET_KEY,
+    host=dbcfg.MINIO_HOST,
+    port=dbcfg.MINIO_PORT,
 )
