@@ -1,7 +1,8 @@
-from typing import Any
+from typing import (
+    Annotated,
+    Any,
+)
 from enum import IntEnum
-from typing import Annotated, Any
-from random import choice
 
 from fastapi import (
     Query,
@@ -28,9 +29,7 @@ class ErrorCode(IntEnum):
 @app.get('/{language}/opportunity/all')
 async def get_all_opportunities(
     language: Language,
-    api_key: Annotated[
-        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
-    ],
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
