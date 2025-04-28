@@ -14,4 +14,3 @@ __all__ = [
 type APIKey = Annotated[str, pydantic.Field(pattern=_APIKey.API_KEY_REGEX)]
 
 OBJECT_ID_REGEX = r'^([\dabcdef]){24}$'
-ObjectId = Annotated[str, pydantic.Field(pattern=OBJECT_ID_REGEX)]

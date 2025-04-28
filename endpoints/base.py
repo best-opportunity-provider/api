@@ -2,12 +2,16 @@ from random import choice
 
 from database.models.pydantic_base import ObjectId
 
-from config import app
+from config import (
+    app,
+    minio_client,
+)
 from middleware.base import APIKey
 
 
 __all__ = [
     'app',
+    'minio_client',
     'APIKey',
     'ObjectId',
     'escape_for_regex',

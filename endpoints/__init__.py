@@ -1,5 +1,6 @@
 from . import (
     auth,
+    file,
     geo,
     opportunity,
     user,
@@ -7,6 +8,7 @@ from . import (
 
 __all__ = [
     'auth',
+    'file',
     'geo',
     'opportunity',
     'user',
