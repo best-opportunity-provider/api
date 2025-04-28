@@ -1,6 +1,7 @@
 from typing import Any
 from enum import IntEnum
-from typing import Annotated
+from typing import Annotated, Any
+from random import choice
 
 from fastapi import (
     Query,
@@ -24,14 +25,17 @@ class ErrorCode(IntEnum):
     INVALID_OPPORTUNITY_ID = 200
 
 
-@app.get('/opportunity/all')
+@app.get('/{language}/opportunity/all')
 async def get_all_opportunities(
-    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+    language: Language,
+    api_key: Annotated[
+        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+    ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
-    opportunities = Opportunity.get_all()
-    return opportunities
+    opportunities = Opportunity.get_all('')
+    return JSONResponse([i.to_dict(language) for i in opportunities])
 
 
 @app.get('/{language}/opportunity')

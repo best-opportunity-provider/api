@@ -29,23 +29,14 @@ class ErrorCode(IntEnum):
     INVALID_OPPORTUNITY_ID = 202
 
 
-class MarkdownSectionModel(pydantic.BaseModel):
-    model_config = {
-        'extra': 'ignore',
-    }
-
-    type: Literal['markdown']
-    title: TransStringModel
-    content: TransStringModel
-
-
-@app.post('/private/opportunity/section')
+@app.post('/{language}/private/opportunity/section')
 async def create(
+    language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
-    body: Annotated[Union[MarkdownSectionModel], pydantic.Field(discriminator='type'), Body()],
+    body: Annotated[Union[opportunity.MarkdownSectionModel], pydantic.Field(discriminator='type'), Body()],
     api_key: Annotated[DeveloperAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_developer_api_key)],
 ) -> JSONResponse:
-    if isinstance(api_key, ErrorTrace):
+    if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
     opp = middleware.getters.get_opportunity_by_id(
         opportunity_id,
@@ -55,6 +46,9 @@ async def create(
     )
     if isinstance(opp, fmt.ErrorTrace):
         return JSONResponse(opp.to_underlying(), status_code=422)
-    instance = opportunity.OpportunitySection.create(body.title, body.content)
-    opp.update(push__sections=instance)
+    if body.type == 'markdown':
+        instance = opportunity.MarkdownSection.create(body.title, body.content)
+        opp.add_section(body.type, str(instance.id))
+    else:
+        raise 1
     return JSONResponse({'id': str(instance.id)})

@@ -35,7 +35,7 @@ async def get_place(
         error_code=ErrorCode.INVALID_PLACE_ID.value,
         path=['body', 'place', 'id'],
     )
-    if isinstance(industry, fmt.ErrorTrace):
+    if isinstance(place, fmt.ErrorTrace):
         return JSONResponse(place.to_underlying(), status_code=422)
     return place.to_dict(language)
 

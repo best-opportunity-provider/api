@@ -1,18 +1,16 @@
 # TODO:
 #   1. GET /opportunity-provider?search={}&api_key={}
 from enum import IntEnum
-from typing import Annotated
+from typing import Annotated, Any
 from random import choice
-import re
 
-from fastapi import Query
+from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
 import pydantic
-from pydantic_core import PydanticCustomError
 
 from ...base import (
-    ObjectId,
-    APIKey,
+    app,
+    ObjectId
 )
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import OpportunityProvider
@@ -26,24 +24,25 @@ class ErrorCode(IntEnum):
     INVALID_REGEX = 201
 
 
-@app.get('/opportunity-provider/all')
+@app.get('/{language}/opportunity-provider/all')
 async def get_all_providers(
+    language: Language,
     api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
-    providers = OpportunityProvider.get_all()
-    return providers
+    providers = OpportunityProvider.get_all(regex='')
+    return JSONResponse([i.to_dict(language) for i in providers])
 
 
-@app.get('/opportunity-provider/id')
+@app.get('/{language}/opportunity-provider/id')
 async def get_provider_by_id(
-    language: fmt.Language,
+    language: Language,
     provider_id: Annotated[ObjectId, Query()],
     api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
@@ -64,17 +63,10 @@ async def get_provider_by_regex(
     language: fmt.Language,
     search: Annotated[str, Query()],
     api_key: Annotated[
-        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
+        Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
-    regex = middleware.regex.validate_regex(
-        regex,
-        error_code=ErrorCode.INVALID_REGEX.value,
-        path=['query', 'provider_regex'],
-    )
-    if isinstance(regex, fmt.ErrorTrace):
-        return JSONResponse(regex.to_underlying(), status_code=422)
-    providers = OpportunityProvider.get_all(regex=regex)
-    return JSONResponse(providers)
+    providers = OpportunityProvider.get_all(regex=f'{search}')
+    return JSONResponse([i.to_dict(language) for i in providers])

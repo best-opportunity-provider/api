@@ -77,28 +77,3 @@ async def patch(
     if raw_errors is None:
         return JSONResponse({})
     return JSONResponse(errors.to_underlying(), status_code=422)
-
-    # formatted_errors = fmt.ErrorTrace()
-    # for raw_error in raw_errors:
-    #     error_appender(
-    #         formatted_errors,
-    #         raw_error.error_code,
-    #         context=raw_error.context,
-    #         language=language,
-    #         error_code_mapping=error_code_mapping,
-    #         model_path=model_path,
-    #     )
-    # return formatted_errors
-
-    # errors = middleware.form.update_opportunity_form(
-    #     form,
-    #     body,
-    #     language=language,
-    #     error_code_mapping={
-    #         CreateFieldErrorCode.PHONE_NUMBER_INVALID_COUNTRY_ID: (
-    #             ErrorCode.PHONE_NUMBER_FIELD_INVALID_COUNTRY_ID.value
-    #         ),
-    #     },
-
-    #     model_path=['body'],
-    # )
