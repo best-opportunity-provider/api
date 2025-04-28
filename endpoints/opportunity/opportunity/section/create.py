@@ -48,7 +48,7 @@ async def create(
         return JSONResponse(opp.to_underlying(), status_code=422)
     if body.type == 'markdown':
         instance = opportunity.MarkdownSection.create(body.title, body.content)
-        opp.add_section(body.type, str(instance.id))
+        opp.add_section(instance)
     else:
         raise 1
     return JSONResponse({'id': str(instance.id)})
