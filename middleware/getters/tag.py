@@ -9,7 +9,7 @@ def error_fn(*, transformed_error_code: int, path: list[str], **kwargs) -> fmt.e
         type=transformed_error_code,
         message=fmt.TranslatedString(
             en='A tag with provided ID doesn\'t exist',
-            ru='Тэга с таким идентификатором не существует',
+            ru='Тег с таким идентификатором не существует',
         ),
         path=path,
     )

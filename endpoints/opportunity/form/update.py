@@ -41,7 +41,7 @@ async def update(
     opportunity = middleware.getters.get_opportunity_by_id(
         opportunity_id,
         language=language,
-        error_code=ErrorCode.INVALID_OPPORTUNITY_ID.value,
+        error_code_mapping={'doesnt_exist': ErrorCode.INVALID_OPPORTUNITY_ID.value},
         path=['query', 'opportunity_id'],
     )
     if isinstance(opportunity, fmt.ErrorTrace):
