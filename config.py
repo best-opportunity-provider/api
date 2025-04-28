@@ -63,7 +63,7 @@ import minio  # noqa: E402
 
 
 def get_minio_client(access_key: str, secret_key: str, host: str, port: int) -> minio.Minio:
-    return None
+    return minio.Minio(f'{host}:{port}', access_key=access_key, secret_key=secret_key, secure=False)
 
 
 minio_client = get_minio_client(
