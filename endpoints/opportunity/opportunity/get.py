@@ -66,7 +66,7 @@ async def get_opportunity_by_id_min(
     return JSONResponse(opportunity.to_dict_min(language))
 
 
-@app.get('/{language}/opportuntiy/free')
+@app.get('/{language}/opportunity/free')
 async def get_opportunity_by_id_free(
     language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
