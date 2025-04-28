@@ -33,7 +33,7 @@ async def get_all_opportunities(
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
-    opportunities = Opportunity.get_all('')
+    opportunities = Opportunity.get_all()
     return JSONResponse([i.to_dict(language) for i in opportunities])
 
 
