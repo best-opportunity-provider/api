@@ -1,9 +1,8 @@
-# from . import (
-# TODO
+from . import (
 #     avatar,
-#     info,
+    info,
 #     password,
-# )
+)
 
 __all__ = [
     'avatar',
