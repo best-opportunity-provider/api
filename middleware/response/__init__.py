@@ -1,4 +1,4 @@
-from .create import create_opportunity_form_response
+from .create_simple import create_opportunity_form_response
 
 __all__ = [
     'create_opportunity_form_response',
