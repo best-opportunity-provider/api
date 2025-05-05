@@ -1,4 +1,7 @@
-from typing import Any
+from typing import (
+    Any,
+    TypedDict,
+)
 import tempfile
 
 from config import minio_client
@@ -10,10 +13,15 @@ from database import (
 from database.models.opportunity.form import FileField
 
 
+class ResponseData(TypedDict):
+    link: str
+    values: dict[str, Any]
+
+
 def get_response_data(
     response: OpportunityFormResponse,
     form: OpportunityForm,
-) -> tuple[dict[str, Any], tempfile.TemporaryDirectory[str]]:
+) -> tuple[ResponseData, tempfile.TemporaryDirectory[str]]:
     directory = tempfile.TemporaryDirectory()
     values = {}
     for name, field in form.fields.items():
