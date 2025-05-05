@@ -4,3 +4,4 @@ venv
 logs
 test.py
 test.ipynb
+submitters/chromedriver.exe
