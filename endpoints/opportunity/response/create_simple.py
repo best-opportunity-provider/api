@@ -4,6 +4,7 @@ from enum import IntEnum
 from fastapi import (
     Depends,
     Query,
+    BackgroundTasks,
 )
 from fastapi.responses import JSONResponse
 
@@ -48,6 +49,7 @@ async def create(
     api_key: Annotated[
         PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
+    background_tasks: BackgroundTasks,
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
@@ -68,4 +70,5 @@ async def create(
     if isinstance(form, fmt.ErrorTrace):
         return JSONResponse(form.to_underlying(), status_code=422)
     response = middleware.response.create_opportunity_form_response(form, api_key.user.fetch())
-    return JSONResponse({'id': str(response.id)})
+    background_tasks.add_task(middleware.response.process_opportunity_form_response, response, form)
+    return JSONResponse({'id': str(response.id)}, status_code=202)
