@@ -14,6 +14,10 @@ from ...base import (
     app,
     ObjectId,
 )
+from database import (
+    Opportunity,
+    PersonalAPIKey,
+)
 from database.models.trans_string import Language
 from database.models.user import UserTier
 
@@ -26,12 +30,22 @@ class ErrorCode(IntEnum):
     NOT_FREE_OPPORTUNITY = 204
 
 
+@app.get('/{language}/opportunities')
+async def get_opportunities(
+    language: Language,
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=api_key.error_code)
+    return JSONResponse([str(opportunity.id) for opportunity in Opportunity.objects])
+
+
 @app.get('/{language}/opportunity')
 async def get_opportunity_by_id(
     language: Language,
     opportunity_id: Annotated[ObjectId, Query()],
     api_key: Annotated[
-        Any | fmt.ErrorTrace, Depends(middleware.auth.GetPersonalAPIKeyWithTier(UserTier.PAID))
+        PersonalAPIKey | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)
     ],
 ) -> JSONResponse:
     if isinstance(api_key, fmt.ErrorTrace):
@@ -39,8 +53,12 @@ async def get_opportunity_by_id(
     opportunity = middleware.getters.get_opportunity_by_id(
         opportunity_id,
         language=language,
-        error_code_mapping={'doesnt_exist': ErrorCode.INVALID_OPPORTUNITY_ID.value},
+        error_code_mapping={
+            'doesnt_exist': ErrorCode.INVALID_OPPORTUNITY_ID.value,
+            'not_free': ErrorCode.NOT_FREE_OPPORTUNITY.value,
+        },
         path=['query', 'opportunity_id'],
+        free=(api_key.user.fetch().tier == UserTier.FREE),
     )
     if isinstance(opportunity, fmt.ErrorTrace):
         return JSONResponse(opportunity.to_underlying(), status_code=422)
@@ -64,26 +82,3 @@ async def get_opportunity_by_id_min(
     if isinstance(opportunity, fmt.ErrorTrace):
         return JSONResponse(opportunity.to_underlying(), status_code=422)
     return JSONResponse(opportunity.to_dict_min(language))
-
-
-@app.get('/{language}/opportunity/free')
-async def get_opportunity_by_id_free(
-    language: Language,
-    opportunity_id: Annotated[ObjectId, Query()],
-    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
-) -> JSONResponse:
-    if isinstance(api_key, fmt.ErrorTrace):
-        return JSONResponse(api_key.to_underlying(), status_code=api_key.error_code)
-    opportunity = middleware.getters.get_opportunity_by_id(
-        opportunity_id,
-        language=language,
-        error_code_mapping={
-            'doesnt_exist': ErrorCode.INVALID_OPPORTUNITY_ID.value,
-            'not_free': ErrorCode.NOT_FREE_OPPORTUNITY.value,
-        },
-        path=['query', 'opportunity_id'],
-        free=True,
-    )
-    if isinstance(opportunity, fmt.ErrorTrace):
-        return JSONResponse(opportunity.to_underlying(), status_code=422)
-    return JSONResponse(opportunity.to_dict(language))

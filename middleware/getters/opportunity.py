@@ -30,7 +30,7 @@ def not_free_error_fn(
         type=error_code_mapping['not_free'],
         message=fmt.TranslatedString(
             en="Free users can't access opportunity with provided id",
-            ru='Бестплатные пользователи не имеют доступа к возможности с этим идентификатором',
+            ru='Бесплатные пользователи не имеют доступа к возможности с этим идентификатором',
         ),
         path=path,
     )
