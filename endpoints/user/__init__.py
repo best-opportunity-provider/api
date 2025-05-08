@@ -1,11 +1,13 @@
 from . import (
-#     avatar,
+    #     avatar,
+    get,
     info,
-#     password,
+    #     password,
 )
 
 __all__ = [
     'avatar',
+    'get',
     'info',
     'password',
 ]
