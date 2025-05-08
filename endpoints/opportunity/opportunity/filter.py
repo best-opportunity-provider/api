@@ -46,7 +46,7 @@ async def filter_opportunity(
 
     if isinstance(api_key, fmt.ErrorTrace):
         return JSONResponse(api_key.to_underlying(), status_code=403)
-    opportunities = Opportunity.get_all('')
+    opportunities = Opportunity.get_all()
     # Filtering
     if body.providers:
         opportunities = filter(lambda opp: contains(opp.provider, body.providers), opportunities)
@@ -58,4 +58,4 @@ async def filter_opportunity(
         opportunities = filter(lambda opp: have_a_common(opp.languages, body.languages), opportunities)
     if body.places:
         opportunities = filter(lambda opp: have_a_common(opp.places, body.places), opportunities)
-    return JSONResponse([i.to_dict(language) for i in opportunities])
+    return JSONResponse([str(i.id) for i in opportunities])

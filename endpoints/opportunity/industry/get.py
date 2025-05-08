@@ -6,10 +6,7 @@ from fastapi import Query, Depends
 from fastapi.responses import JSONResponse
 import pydantic
 
-from ...base import (
-    app,
-    ObjectId
-)
+from ...base import app, ObjectId
 from database.models.trans_string import Language
 from database.models.opportunity.opportunity import OpportunityIndustry
 
@@ -40,7 +37,12 @@ async def get(
     return industry.to_dict(language)
 
 
-# @app.get('/opportunity-industry')
-# async def get_all(query: Annotated[QueryParams, Query()]) -> JSONResponse:
-#     industries = OpportunityIndustry.get_all(regex=query.regex)
-#     return industries
+@app.get('/{language}/opportunity-industry/all')
+async def get_all_industries(
+    language: fmt.Language,
+    api_key: Annotated[Any | fmt.ErrorTrace, Depends(middleware.auth.get_personal_api_key)],
+) -> JSONResponse:
+    if isinstance(api_key, fmt.ErrorTrace):
+        return JSONResponse(api_key.to_underlying(), status_code=403)
+    industries = OpportunityIndustry.get_all()
+    return JSONResponse([i.to_dict(language) for i in industries])

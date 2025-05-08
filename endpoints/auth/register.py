@@ -34,5 +34,5 @@ async def register(language: Language, body: Annotated[CreateModel, Body()]) -> 
     if isinstance(instance, Error):
         formatted_errors = fmt.ErrorTrace()
         appender(formatted_errors, instance.error_code, language=language)
-        return JSONResponse(formatted_errors.to_underlying(), status_code=403)
+        return JSONResponse(formatted_errors.to_underlying(), status_code=422)
     return JSONResponse({'id': str(instance.id)}, status_code=200)
