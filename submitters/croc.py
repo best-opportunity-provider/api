@@ -43,4 +43,5 @@ def run_submitter(data: ResponseData) -> None:
     driver.find_element(By.XPATH, '//*[@id="responseForm"]/div/form/div[11]/div/div/label').click()
     time.sleep(1)
     # driver.find_element(By.CLASS_NAME, 'vacancy-response__send-btn').click()
-    time.sleep(3)
+    time.sleep(2)
+    driver.get('https://google.com')

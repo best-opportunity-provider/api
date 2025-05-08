@@ -46,3 +46,4 @@ def run_submitter(data: ResponseData) -> None:
     time.sleep(1)
     # driver.find_element(By.XPATH, '//*[@id=":r5:"]').click()
     time.sleep(2)
+    driver.get('https://google.com')

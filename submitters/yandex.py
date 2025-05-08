@@ -7,6 +7,8 @@ from .base import (
 from .config import (
     driver,
     By,
+    WebDriverWait,
+    EC,
 )
 from database import (
     OpportunityForm,
@@ -38,9 +40,15 @@ def run_submitter(data: ResponseData) -> None:
     driver.find_element(By.ID, 'answer_param_phone').send_keys(data['values']['phone'])
     time.sleep(0.5)
     driver.find_element(By.ID, 'answer_non_profile_email_5257').send_keys(data['values']['email'])
-    for but in driver.find_elements(By.XPATH, "//input[@type='checkbox']"):
-        if not but.is_selected():
-            but.click()
+    wait = WebDriverWait(driver, 20)
+    checkboxes = wait.until(
+        EC.presence_of_all_elements_located((By.XPATH, "//input[@type='checkbox']"))
+    )
+    for checkbox in checkboxes:
+        driver.execute_script('arguments[0].click();', checkbox)
     time.sleep(0.5)
-    # driver.find_elements(By.TAG_NAME, 'button')[-1].click()
+    submit_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
+    # submit_button.click()
     time.sleep(2)
+    driver.get('https://google.com')
+    driver.delete_all_cookies()
