@@ -4,13 +4,19 @@ from database import (
 )
 from database.models.opportunity.form import (
     YandexFormsSubmitMethod,
+    CrocSubmitMethod,
+    SuperJobSubmitMethod,
 )
 from submitters import (
     yandex_forms_submit_handler,
+    croc_submit_handler,
+    superjob_submit_handler,
 )
 
 HANDLERS = {
     YandexFormsSubmitMethod: yandex_forms_submit_handler,
+    CrocSubmitMethod: croc_submit_handler,
+    SuperJobSubmitMethod: superjob_submit_handler,
 }
 
 
