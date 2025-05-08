@@ -48,6 +48,7 @@ error_appender = fmt.enum.ErrorAppender[Literal['cant_access']](
 
 extension_to_media_type = {
     'png': 'image/png',
+    'jpg': 'image/jpeg',
 }
 
 
