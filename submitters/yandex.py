@@ -5,7 +5,9 @@ from .base import (
     get_response_data,
 )
 from .config import (
-    driver,
+    webdriver,
+    service,
+    options,
     By,
     WebDriverWait,
     EC,
@@ -29,7 +31,10 @@ def yandex_forms_submit_handler(
 
 
 def run_submitter(data: ResponseData) -> None:
+    driver = webdriver.Chrome(options=options, service=service)
+    driver.set_page_load_timeout(30)
     driver.get(data['link'])
+    wait = WebDriverWait(driver, 20)
     time.sleep(2)
     driver.find_element(By.CSS_SELECTOR, "input[type='file']").send_keys(data['values']['cv'])
     time.sleep(0.5)
@@ -40,15 +45,15 @@ def run_submitter(data: ResponseData) -> None:
     driver.find_element(By.ID, 'answer_param_phone').send_keys(data['values']['phone'])
     time.sleep(0.5)
     driver.find_element(By.ID, 'answer_non_profile_email_5257').send_keys(data['values']['email'])
-    wait = WebDriverWait(driver, 20)
     checkboxes = wait.until(
         EC.presence_of_all_elements_located((By.XPATH, "//input[@type='checkbox']"))
     )
     for checkbox in checkboxes:
         driver.execute_script('arguments[0].click();', checkbox)
     time.sleep(0.5)
-    submit_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
+    # submit_button = wait.until(EC.element_to_be_clickable(
+    #     (By.XPATH, "//button[@type='submit']")
+    # ))
     # submit_button.click()
-    time.sleep(2)
-    driver.get('https://google.com')
-    driver.delete_all_cookies()
+    # time.sleep(5)
+    driver.close()
