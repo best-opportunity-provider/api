@@ -39,7 +39,7 @@ async def update(
     cv = File.create(
         minio_client,
         form.cv.file,
-        form.cv.filename.split('.', maxsplit=1)[-1],
+        form.cv.filename.rsplit('.', maxsplit=1)[-1],
         bucket=File.Bucket.USER_CV,
         size_bytes=form.cv.size,
         owner_id=api_key.user.id,
