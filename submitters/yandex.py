@@ -51,9 +51,9 @@ def run_submitter(data: ResponseData) -> None:
     for checkbox in checkboxes:
         driver.execute_script('arguments[0].click();', checkbox)
     time.sleep(0.5)
-    # submit_button = wait.until(EC.element_to_be_clickable(
-    #     (By.XPATH, "//button[@type='submit']")
-    # ))
-    # submit_button.click()
-    # time.sleep(5)
+    submit_button = wait.until(EC.element_to_be_clickable(
+        (By.XPATH, "//button[@type='submit']")
+    ))
+    submit_button.click()
+    time.sleep(5)
     driver.close()

@@ -53,6 +53,6 @@ def run_submitter(data: ResponseData) -> None:
         date_of_birth.strftime('%d.%m.%Y')
     )
     time.sleep(1)
-    # driver.find_element(By.XPATH, '//*[@id=":r5:"]').click()
-    # time.sleep(5)
+    driver.find_element(By.XPATH, '//*[@id=":r5:"]').click()
+    time.sleep(5)
     driver.close()

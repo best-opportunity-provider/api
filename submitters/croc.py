@@ -51,6 +51,6 @@ def run_submitter(data: ResponseData) -> None:
     driver.find_element(By.CSS_SELECTOR, "input[type='file']").send_keys(data['values']['cv'])
     driver.find_element(By.XPATH, '//*[@id="responseForm"]/div/form/div[11]/div/div/label').click()
     time.sleep(1)
-    # driver.find_element(By.CLASS_NAME, 'vacancy-response__send-btn').click()
-    # time.sleep(3)
+    driver.find_element(By.CLASS_NAME, 'vacancy-response__send-btn').click()
+    time.sleep(3)
     driver.close()
